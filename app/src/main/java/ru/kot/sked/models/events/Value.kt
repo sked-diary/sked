@@ -1,0 +1,31 @@
+package ru.kot.sked.models.events
+
+
+import com.google.gson.annotations.SerializedName
+
+data class Value(
+    @SerializedName("grade")
+    val grade: Grade,
+    @SerializedName("grade_system_id")
+    val gradeSystemId: Long?,
+    @SerializedName("grade_system_type")
+    val gradeSystemType: String,
+    @SerializedName("name")
+    val name: String?,
+    @SerializedName("nmax")
+    val nmax: Double?
+) {
+    companion object {
+        fun fromMarkListSubject(value: ru.kot.sked.models.marklistsubjectshort.Value): Value {
+            return value.run {
+                Value(
+                    grade,
+                    gradeSystemId = null,
+                    gradeSystemType,
+                    name = null,
+                    nmax = null
+                )
+            }
+        }
+    }
+}

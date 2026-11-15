@@ -1,0 +1,22 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Keystore & release credentials
+*.jks
+*.keystore
+keystore.properties
+
+# Local tools & build helpers
+build_apk.sh
+build_release.sh
+create_keystore.py
+RUSTORE_PUBLISHING_DATA.md
+privacy_policy.html

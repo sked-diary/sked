@@ -1,0 +1,146 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
+import java.io.ByteArrayOutputStream
+import java.util.Properties
+import java.io.FileInputStream
+
+plugins {
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.kotlinAndroid)
+}
+
+val gitLatestCommit: String = ByteArrayOutputStream().use { outputStream ->
+    project.exec {
+        executable("git")
+        args("log", "--oneline", "-1", "--format=format:%h", ".")
+        standardOutput = outputStream
+    }
+    outputStream.toString()
+}
+
+android {
+    namespace = "ru.kot.sked"
+    compileSdk = 35
+    buildToolsVersion = "36.0.0"
+
+    defaultConfig {
+        applicationId = "ru.kot.sked"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 40
+        versionName = "1.0"
+        archivesName = gitLatestCommit
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+    }
+
+    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    val keystoreProperties = Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    }
+
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                val storeFilePath = keystoreProperties.getProperty("storeFile")
+                storeFile = rootProject.file(storeFilePath)
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+
+        debug {
+            applicationIdSuffix = ".debug"
+        }
+
+        // Fast, non-debuggable build signed with the debug key (same package as debug => installs over it).
+        create("fast") {
+            initWith(getByName("debug"))
+            isDebuggable = false
+            isMinifyEnabled = false
+            matchingFallbacks += listOf("debug")
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.3"
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+    androidResources {
+        generateLocaleConfig = true
+    }
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+}
+
+dependencies {
+
+    implementation(libs.core.ktx)
+    implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.activity.compose)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.ui)
+    implementation(libs.ui.graphics)
+    implementation(libs.ui.tooling.preview)
+    implementation(libs.material3)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.browser)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.glide)
+    implementation(libs.converter.scalars)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    implementation(libs.androidx.biometric.ktx)
+    implementation(libs.vico.compose.m3)
+    implementation(libs.vico.compose)
+    implementation(libs.zoomable)
+    implementation(libs.dotsindicator)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.ui.test.junit4)
+    debugImplementation(libs.ui.tooling)
+    debugImplementation(libs.ui.test.manifest)
+}
+
+tasks.withType<com.android.build.gradle.internal.tasks.CheckAarMetadataTask> {
+    enabled = false
+}
